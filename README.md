@@ -88,87 +88,11 @@ See the diagrams below. View them individually:
 3. `OrderStatusConsumer` updates order state in PostgreSQL and emits `notification.email`.
 4. Payment is simulated through `POST /api/orders/{id}/pay`, which publishes `order.paid` on success.
 5. `order.paid` is consumed by both `OrderStatusConsumer` (updates status to PAID, publishes shipping and notifications) and `AnalyticsConsumer` (updates metrics).
-
-## Architecture Diagrams
-
-2. **[Order Lifecycle Sequence](diagrams/order-lifecycle-sequence-fixed.md)**
-3. **[Kafka Topics & Fan-out](diagrams/kafka-topics-fanout-fixed.md)**
-
-Individual diagram files are ready for conversion to PNG/SVG using Mermaid CLI:
-
-```bash
-# Install mermaid CLI globally if needed
-npm install -g @mermaid-js/mermaid-cli
-
-# Convert example
-mmdc -i diagrams/architecture-overview.md -o diagrams/architecture-overview.png
-```
-
-</xai:function_call >
-
-<xai:function_call name="edit_file">
-<parameter name="path">TODOmd
-   `AnalyticsConsumer` in a separate consumer group to update daily sales metrics.
 6. Shipping publishes `order.shipped`, which updates the order and triggers another email notification.
 
 ## Architecture Diagrams
 
-### 1. High-Level System Architecture
-
-```mermaid
-graph TD
-    subgraph Frontend ["Frontend React"]
-        A[Place Order<br/>Dashboard] --> B[API Calls]
-    end
-    subgraph Backend ["Spring Boot Backend"]
-        C[Controllers<br/>(Order, Payment)] --> D[Services<br/>(OrderService)]
-        D --> E[Producers<br/>(OrderProducer<br/>PaymentProducer<br/>StatusProducer<br/>ShippingProducer)]
-    end
-    subgraph Kafka ["Apache Kafka KRaft"]
-        I[order.created]
-        J[order.validated]
-        K[order.rejected]
-        L[order.paid]
-        M[order.shipped]
-        N[notification.email]
-        O[order.dlq]
-    end
-    subgraph Consumers ["Kafka Consumers"]
-        P[InventoryConsumer<br/>(stock validation)]
-        Q[OrderStatusConsumer<br/>(status updates)]
-        R[AnalyticsConsumer<br/>(metrics)]
-        S[NotificationConsumer<br/>(emails)]
-    end
-    subgraph External ["External Services"]
-        T[PostgreSQL<br/>(orders, products)]
-        U[MailDev<br/>(email testing)]
-        V[In-memory Analytics]
-    end
-    
-    B --> C
-    E --> I
-    I --> P
-    P --> J
-    P --> K
-    J --> Q
-    K --> Q
-    F[Payment API] --> L
-    L --> Q
-    L -.->|fan-out| R
-    Q --> M
-    Q --> N
-    M --> H[Shipping]
-    N --> S
-    S --> U
-    P --> T
-    Q --> T
-    R --> V
-    
-    classDef kafka fill:#f9d71c,stroke:#333,stroke-width:2px
-    class Kafka kafka
-```
-
-### 2. Order Lifecycle Sequence
+### 1. Order Lifecycle Sequence
 
 ```mermaid
 sequenceDiagram
@@ -201,7 +125,7 @@ sequenceDiagram
     AC->>DB: update analytics
 ```
 
-### 3. Kafka Topics & Fan-out
+### 2. Kafka Topics & Fan-out
 
 ```mermaid
 graph LR
@@ -222,11 +146,6 @@ graph LR
     class OP,OV,OR,PP,NS,SP producer
     class IC,OSC,AC,NC consumer
 ```
-</xai:function_call >
-
-<xai:function_call name="edit_file">
-<parameter name="path">TODO.md
-
 ## Seed data
 
 - 5 customers
